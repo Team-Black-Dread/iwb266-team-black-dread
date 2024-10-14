@@ -1,9 +1,8 @@
+
 import ballerina/time;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _; // Bundles the driver to the project.
 import ballerina/sql;
-
-
 
 configurable string USER = ?;
 configurable string PASSWORD = ?;
@@ -16,10 +15,14 @@ final mysql:Client dbClient = check new(
 );
 
 
+///////////////////////// Service Operations/////////////////////////
+
+//Add a new service to the database
+
 isolated function addService(Service queue_service) returns int|error {
     sql:ExecutionResult result = check dbClient->execute(`
-        INSERT INTO Services (service_name, time_slot, capacity, occupied_positions)
-        VALUES (${queue_service.service_name}, ${queue_service.time_slot}, 
+        INSERT INTO Services (service_name, time_period,start_time,working_days, working_slots, capacity, occupied_positions)
+        VALUES (${queue_service.service_name}, ${queue_service.time_period}, ${queue_service.start_time}, ${queue_service.working_days}, ${queue_service.working_slots},
                 ${queue_service.capacity}, 0)
     `);
     
@@ -31,6 +34,7 @@ isolated function addService(Service queue_service) returns int|error {
     }
 }
 
+//Retrieve a service from the database
 isolated function getService(int id) returns Service|error {
     Service queue_service = check dbClient->queryRow(
         `SELECT * FROM QueueDetails WHERE service_id = ${id}`
@@ -38,6 +42,7 @@ isolated function getService(int id) returns Service|error {
     return queue_service;
 }
 
+//Retrieve all services from the database
 isolated function getAllServices() returns Service[]|error {
     Service[] queue_services = [];
     stream<Service, error?> resultStream = dbClient->query(
@@ -51,11 +56,15 @@ isolated function getAllServices() returns Service[]|error {
     return queue_services;
 }
 
+//Update a service in the database
 isolated function updateService(Service queue_service) returns int|error {
     sql:ExecutionResult result = check dbClient->execute(`
         UPDATE QueueDetails SET
             service_name = ${queue_service.service_name},
-            time_slot = ${queue_service.time_slot},
+            time_slot = ${queue_service.time_period},
+            start_time = ${queue_service.start_time},
+            working_days = ${queue_service.working_days},
+            working_slots = ${queue_service.working_slots},
             capacity = ${queue_service.capacity}
         WHERE service_id = ${queue_service.service_id}
     `);
@@ -67,13 +76,14 @@ isolated function updateService(Service queue_service) returns int|error {
     }
 }
 
+//Remove a service from the database
 isolated function removeService(int id) returns int|error {
     // Retrieve the service_name before deleting the service
-    record {| string service_name; |} serviceRecord = check dbClient->queryRow(
-        `SELECT service_name FROM Services WHERE service_id = ${id}`
+    record {| int service_id; |} serviceRecord = check dbClient->queryRow(
+        `SELECT service_id FROM Services WHERE service_id = ${id}`
     );
     
-    string serviceName = serviceRecord.service_name;
+    int service_id = serviceRecord.service_id;
 
     // Remove the service
     sql:ExecutionResult serviceDeleteResult = check dbClient->execute(`
@@ -82,42 +92,44 @@ isolated function removeService(int id) returns int|error {
 
     int? affectedRowCount = serviceDeleteResult.affectedRowCount;
     if affectedRowCount is int && affectedRowCount > 0 {
-        // After successfully removing the service, remove all related queues
+        // After successfully removing the service, remove all related queue entries
         sql:ExecutionResult queueDeleteResult = check dbClient->execute(`
-            DELETE FROM Queues WHERE service_name = ${serviceName}
+            DELETE FROM QueueEntries WHERE service_id = ${service_id}
         `);
 
         int? queueAffectedRows = queueDeleteResult.affectedRowCount;
         if queueAffectedRows is int {
             return affectedRowCount; // Return the number of affected rows from the service delete operation
         } else {
-            return error("Unable to delete related queues for the service");
+            return error("Unable to delete related queue entries for the service");
         }
     } else {
         return error("Unable to remove the service");
     }
 }
 
+///////////////////////// Queue Entries Operations/////////////////////////
 
-isolated function addQueue(Queue queue) returns int|error {
-    time:Utc parsedQueueTime = check time:utcFromString(queue.queue_time); // Convert string to time:Utc.
+//Add a new queue entry to the database
+isolated function addQueueEntry(QueueEntries queue) returns int|error {
+    time:Utc parsedQueueTime = check time:utcFromString(queue.estimated_time); // Convert string to time:Utc.
 
     // Fetch the current number of occupied positions for the relevant service
     int occupiedPositions = check dbClient->queryRow(
-        `SELECT occupied_positions FROM Services WHERE service_name = ${queue.service_name}`
+        `SELECT occupied_positions FROM Services WHERE service_id = ${queue.service_id}`
     );
 
     // The queue position is one more than the current occupied positions
     int newPosition = occupiedPositions + 1;
 
-    // Insert the new queue into the Queues table with the updated position
+    // Insert the new queue entry into the QueueEntries table with the updated position
     sql:ExecutionResult insertResult = check dbClient->execute(`
-        INSERT INTO Queues (service_name, customer_name, queue_time, position, status)
-        VALUES (${queue.service_name}, ${queue.customer_name}, ${parsedQueueTime}, 
-                ${newPosition}, ${queue.status})
+        INSERT INTO QueueEntries (service_id, customer_id, estimated_time, position)
+        VALUES (${queue.service_id}, ${queue.customer_id}, ${parsedQueueTime}, 
+                ${newPosition})
     `);
     
-    // Get the last inserted queue ID
+    // Get the last inserted queue entry ID
     int|string? lastInsertId = insertResult.lastInsertId;
 
     // If insertion was successful, increment the occupied positions for the relevant service
@@ -126,14 +138,14 @@ isolated function addQueue(Queue queue) returns int|error {
         sql:ExecutionResult updateResult = check dbClient->execute(`
             UPDATE Services 
             SET occupied_positions = occupied_positions + 1 
-            WHERE service_name = ${queue.service_name}
+            WHERE service_id = ${queue.service_id}
         `);
 
         // Check if the update was successful by inspecting affectedRowCount
         int? affectedRowCount = updateResult.affectedRowCount;
 
         if affectedRowCount is int && affectedRowCount > 0 {
-            return lastInsertId; // Return the ID of the newly added queue
+            return lastInsertId; // Return the ID of the newly added queue entry
         } else {
             return error("Unable to update the occupied positions");
         }
@@ -143,21 +155,21 @@ isolated function addQueue(Queue queue) returns int|error {
 }
 
 
-
-
-isolated function getQueue(int id) returns Queue|error {
-    Queue queue = check dbClient->queryRow(
-        `SELECT * FROM Queues WHERE queue_id = ${id}`
+//Retrieve a queue entry from the database
+isolated function getQueueEntry(int id) returns QueueEntries|error {
+    QueueEntries queue = check dbClient->queryRow(
+        `SELECT * FROM QueueEntries WHERE queue_entry_id = ${id}`
     );
     return queue;
 }
 
-isolated function getAllQueues() returns Queue[]|error {
-    Queue[] queues = [];
-    stream<Queue, error?> resultStream = dbClient->query(
-        `SELECT * FROM Queues`
+//Retrieve all queue entries from the database
+isolated function getAllQueueEntries() returns QueueEntries[]|error {
+    QueueEntries[] queues = [];
+    stream<QueueEntries, error?> resultStream = dbClient->query(
+        `SELECT * FROM QueueEntries`
     );
-    check from Queue queue in resultStream
+    check from QueueEntries queue in resultStream
         do {
             queues.push(queue);
         };
@@ -165,16 +177,16 @@ isolated function getAllQueues() returns Queue[]|error {
     return queues;
 }
 
-isolated function updateQueue(Queue queue) returns int|error {
-    time:Utc parsedQueueTime = check time:utcFromString(queue.queue_time); // Convert string to time:Utc.
+//Update a queue entry in the database
+isolated function updateQueueEntry(QueueEntries queue) returns int|error {
+    time:Utc parsedQueueTime = check time:utcFromString(queue.estimated_time); // Convert string to time:Utc.
     sql:ExecutionResult result = check dbClient->execute(`
-        UPDATE Queues SET
-            service_name = ${queue.service_name},
-            customer_name = ${queue.customer_name},
-            queue_time = ${parsedQueueTime},
+        UPDATE QueueEntries SET
+            service_id = ${queue.service_id},
+            customer_id = ${queue.customer_id},
+            estimated_time = ${parsedQueueTime},
             position = ${queue.position},
-            status = ${queue.status}
-        WHERE queue_id = ${queue.queue_id}
+        WHERE queue_entry_id = ${queue.queue_entry_id}
     `);
     int|string? lastInsertId = result.lastInsertId;
     if lastInsertId is int {
@@ -184,27 +196,28 @@ isolated function updateQueue(Queue queue) returns int|error {
     }
 }
 
-isolated function removeQueue(int queueId) returns int|error {
+//Remove a queue entry from the database
+isolated function removeQueueEntry(int queueId) returns int|error {
     // Retrieve the queue information before deleting it to get its position and service name
-    record {| string service_name; int position; |} queueRecord = check dbClient->queryRow(
-        `SELECT service_name, position FROM Queues WHERE queue_id = ${queueId}`
+    record {| int service_id; int position; |} queueRecord = check dbClient->queryRow(
+        `SELECT service_id, position FROM QueueEntries WHERE queue_entry_id = ${queueId}`
     );
     
-    string serviceName = queueRecord.service_name;
+    int service_id = queueRecord.service_id;
     int removedQueuePosition = queueRecord.position;
 
-    // Remove the queue
+    // Remove the queue entry
     sql:ExecutionResult deleteResult = check dbClient->execute(`
-        DELETE FROM Queues WHERE queue_id = ${queueId}
+        DELETE FROM QueueEntries WHERE queue_entry_id = ${queueId}
     `);
 
     int? affectedRowCount = deleteResult.affectedRowCount;
     if affectedRowCount is int && affectedRowCount > 0 {
-        // After successfully removing the queue, decrement the positions of the relevant queues
+        // After successfully removing the queue entry, decrement the positions of the relevant queue entries
         sql:ExecutionResult updateResult = check dbClient->execute(`
-            UPDATE Queues
+            UPDATE QueueEntries
             SET position = position - 1
-            WHERE service_name = ${serviceName} AND position > ${removedQueuePosition}
+            WHERE service_id = ${service_id} AND position > ${removedQueuePosition}
         `);
 
         int? updateAffectedRows = updateResult.affectedRowCount;
@@ -213,7 +226,7 @@ isolated function removeQueue(int queueId) returns int|error {
             sql:ExecutionResult serviceUpdateResult = check dbClient->execute(`
                 UPDATE Services
                 SET occupied_positions = occupied_positions - 1
-                WHERE service_name = ${serviceName}
+                WHERE service_id= ${service_id}
             `);
 
             int? serviceAffectedRowCount = serviceUpdateResult.affectedRowCount;
@@ -223,9 +236,9 @@ isolated function removeQueue(int queueId) returns int|error {
                 return error("Unable to update the occupied positions of the service");
             }
         } else {
-            return error("Unable to update the positions of other queues");
+            return error("Unable to update the positions of other queue entries");
         }
     } else {
-        return error("Unable to remove the queue");
+        return error("Unable to remove the queue entry");
     }
 }
