@@ -1,9 +1,8 @@
-import ballerina/io;
 import ballerina/time;
 import ballerina/regex;
 
 // Function to calculate the estimated time for a service.
-public function calculateEstimatedTime(int positions, string start_time, int timePeriod, string[] workingDays, string workingSlot) returns string|error {
+isolated function calculateEstimatedTime(int positions, string start_time, int timePeriod, string[] workingDays, string workingSlot) returns string|error {
 
     // Calculate the total working hours per day based on the working slot.
     int[] workingSlotDetails = check WorkingSlot(workingSlot);
@@ -42,7 +41,7 @@ public function calculateEstimatedTime(int positions, string start_time, int tim
 }
 
 // Function to parse and calculate the total working slot duration.
-public function WorkingSlot(string slot) returns int[]|error  {
+isolated function WorkingSlot(string slot) returns int[]|error  {
     // Split the working slot string (e.g., "08:30-17:30") into start and end times.
     string[] time = regex:split(slot, "-");
     string[] start_time = regex:split(time[0], ":");
@@ -64,7 +63,7 @@ public function WorkingSlot(string slot) returns int[]|error  {
 }
 
 // Function to get the current local time in the specified timezone (Asia/Colombo).
-public function getLocalTime() returns string|time:Error {
+isolated function getLocalTime() returns string|time:Error {
     // Convert UTC time to civil time in the Asia/Colombo timezone.
     time:Civil civil = check time:civilFromString(time:utcToString(time:utcNow()) + "[Asia/Colombo]");
 
@@ -74,7 +73,7 @@ public function getLocalTime() returns string|time:Error {
 } 
 
 // Function to calculate the remaining service time based on the current position, time, and working slots.
-public function calculateRemainingTime(int position, string start_time, int timePeriod, string[] workingDays, int[] workingSlotDetails) returns int|error {
+isolated function calculateRemainingTime(int position, string start_time, int timePeriod, string[] workingDays, int[] workingSlotDetails) returns int|error {
     int startingMinute = workingSlotDetails[1];
     int endingMinute = workingSlotDetails[2];
     int totalRemainingMinutes = (position - 1) * timePeriod;
@@ -92,7 +91,7 @@ public function calculateRemainingTime(int position, string start_time, int time
 
         // Loop to calculate the remaining time across days and working hours.
         while (time < totalRemainingMinutes) {
-            if (isContain(workingDays, today)) {
+            if (workingDays.indexOf(today) != ()) {
                 if (currentMinuteRounded >= startingMinute && currentMinuteRounded < endingMinute) {
                     time += timePeriod;
                     currentMinuteRounded += timePeriod;
@@ -118,8 +117,8 @@ public function calculateRemainingTime(int position, string start_time, int time
     return totalMinutes;
 }
 
-// Function to extract the total minutes from a time string (e.g., "08:30").
-public function extractTime(string input) returns int|error {
+// Function to extract the total minutes from a time string
+isolated function extractTime(string input) returns int|error {
     // Parse the input string to a Civil record and extract time components.
     time:Civil|time:Error civil = time:civilFromString(input);
     if civil is time:Error {
@@ -134,7 +133,7 @@ public function extractTime(string input) returns int|error {
 }
 
 // Function to extract the day of the week (e.g., "Mon", "Tue") from a time string.
-public function extractDayOfWeek(string input) returns string|error {
+isolated function extractDayOfWeek(string input) returns string|error {
     // Parse the input string to a Civil record.
     time:Civil|time:Error civil = time:civilFromString(input);
     if civil is time:Error {
@@ -160,7 +159,7 @@ public function extractDayOfWeek(string input) returns string|error {
 
 
 // Function to get the next day based on the current day (e.g., "Mon" -> "Tue").
-public function getNextDay(string currentDay) returns string {
+isolated  function getNextDay(string currentDay) returns string {
     // Map of days to their next day.
     map<string> daysMap = {
         "Mon": "Tue",
@@ -176,8 +175,5 @@ public function getNextDay(string currentDay) returns string {
     return nextDay ?: "Invalid day";
 }
 
-// Function to check if an element exists in an array.
-public function isContain(string[] array1, string id) returns boolean {
-    return array1.indexOf(id) != ();
-}
+
 

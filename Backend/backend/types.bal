@@ -8,9 +8,9 @@ public type QueueEntries record {|
 public type Service record {| 
     int service_id?;
     string service_name;
-    string time_period;
+    int time_period;
     string start_time;
-    string[] working_days ;
+    string working_days ;
     string working_slots;
     int capacity;
     int occupied_positions; // New field for tracking occupied positions

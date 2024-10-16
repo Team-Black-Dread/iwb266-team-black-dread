@@ -2,7 +2,7 @@ import ballerina/http;
 
 service /queues on new http:Listener(8080) {
 
-    isolated resource function post .(@http:Payload QueueEntries queueEntry) returns int|error? {
+    isolated resource function post .(@http:Payload QueueEntries queueEntry) returns string|error? {
         return addQueueEntry(queueEntry);
     }
 
