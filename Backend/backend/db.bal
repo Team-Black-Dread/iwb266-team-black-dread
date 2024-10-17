@@ -112,33 +112,33 @@ isolated function removeService(int id) returns int|error {
 ///////////////////////// Queue Entries Operations/////////////////////////
 
 //Add a new queue entry to the database
-isolated function addQueueEntry(QueueEntries queue) returns string|error {
+isolated function addQueueEntry(int service_id, int customer_id) returns string|error {
     
 
     // Fetch the current number of occupied positions for the relevant service
     int occupiedPositions = check dbClient->queryRow(
-        `SELECT occupied_positions FROM Services WHERE service_id = ${queue.service_id}`
+        `SELECT occupied_positions FROM Services WHERE service_id = ${service_id}`
     );
 
     // The queue position is one more than the current occupied positions
     int newPosition = occupiedPositions + 1;
 
     string start_time = check dbClient->queryRow(
-        `SELECT start_time FROM Services WHERE service_id = ${queue.service_id}`
+        `SELECT start_time FROM Services WHERE service_id = ${service_id}`
     );
 
     int timePeriod = check dbClient->queryRow(
-        `SELECT time_period FROM Services WHERE service_id = ${queue.service_id}`
+        `SELECT time_period FROM Services WHERE service_id = ${service_id}`
     );
 
     string workingDaysString = check dbClient->queryRow(
-        `SELECT working_days FROM Services WHERE service_id = ${queue.service_id}`
+        `SELECT working_days FROM Services WHERE service_id = ${service_id}`
     );
     string[] workingDays = regex:split(workingDaysString, " ");
 
 
     string slot = check dbClient->queryRow(
-        `SELECT working_slots FROM Services WHERE service_id = ${queue.service_id}`
+        `SELECT working_slots FROM Services WHERE service_id = ${service_id}`
     );
 
 
@@ -150,7 +150,7 @@ isolated function addQueueEntry(QueueEntries queue) returns string|error {
     // Insert the new queue entry into the QueueEntries table with the updated position
     sql:ExecutionResult insertResult = check dbClient->execute(`
         INSERT INTO QueueEntries (service_id, customer_id, estimated_time, position)
-        VALUES (${queue.service_id}, ${queue.customer_id}, ${estimatedTime}, 
+        VALUES (${service_id}, ${customer_id}, ${estimatedTime}, 
                 ${newPosition})
     `);
     
@@ -163,7 +163,7 @@ isolated function addQueueEntry(QueueEntries queue) returns string|error {
         sql:ExecutionResult updateResult = check dbClient->execute(`
             UPDATE Services 
             SET occupied_positions = occupied_positions + 1 
-            WHERE service_id = ${queue.service_id}
+            WHERE service_id = ${service_id}
         `);
 
         // Check if the update was successful by inspecting affectedRowCount
@@ -193,6 +193,21 @@ isolated function getAllQueueEntries() returns QueueEntries[]|error {
     QueueEntries[] queues = [];
     stream<QueueEntries, error?> resultStream = dbClient->query(
         `SELECT * FROM QueueEntries`
+    );
+    check from QueueEntries queue in resultStream
+        do {
+            queues.push(queue);
+        };
+    check resultStream.close();
+    return queues;
+}
+
+//Retrieve  queue entries that are related to a paticular service
+
+isolated function getServiceQueueEntries(int service_id) returns QueueEntries[]|error {
+    QueueEntries[] queues = [];
+    stream<QueueEntries, error?> resultStream = dbClient->query(
+        `SELECT * FROM QueueEntries WHERE service_id = ${service_id}`
     );
     check from QueueEntries queue in resultStream
         do {
