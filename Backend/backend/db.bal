@@ -4,6 +4,7 @@ import ballerinax/mysql;
 import ballerinax/mysql.driver as _; // Bundles the driver to the project.
 import ballerina/sql;
 import ballerina/regex;
+import ballerina/io;
 
 configurable string USER = ?;
 configurable string PASSWORD = ?;
@@ -256,18 +257,56 @@ isolated function removeQueueEntry(int queueId) returns int|error {
         // After successfully removing the queue entry, decrement the positions of the relevant queue entries
         sql:ExecutionResult updateResult = check dbClient->execute(`
             UPDATE QueueEntries
-            SET 
-                position = position - 1
+            SET position = position - 1
             WHERE service_id = ${service_id} AND position > ${removedQueuePosition}
         `);
 
         int? updateAffectedRows = updateResult.affectedRowCount;
         if updateAffectedRows is int {
+            // Fetch updated queue entries that have been affected (i.e., their positions were decremented)
+            QueueEntries[] updatedEntries = check getServiceQueueEntries(service_id);
+
+            // Recalculate estimated time for each queue entry
+            foreach QueueEntries queueEntry in updatedEntries {
+                if queueEntry.position >= removedQueuePosition {
+                    string start_time = check dbClient->queryRow(`
+                        SELECT start_time FROM Services WHERE service_id = ${service_id}
+                    `);
+
+                    int timePeriod = check dbClient->queryRow(`
+                        SELECT time_period FROM Services WHERE service_id = ${service_id}
+                    `);
+
+                    string workingDaysString = check dbClient->queryRow(`
+                        SELECT working_days FROM Services WHERE service_id = ${service_id}
+                    `);
+                    string[] workingDays = regex:split(workingDaysString, " ");
+
+                    string slot = check dbClient->queryRow(`
+                        SELECT working_slots FROM Services WHERE service_id = ${service_id}
+                    `);
+
+                    // Calculate new estimated time
+                    string newEstimatedTime = check calculateEstimatedTime(queueEntry.position, start_time, timePeriod, workingDays, slot);
+
+                    // Update the estimated time in the database
+                    sql:ExecutionResult estimateUpdateResult = check dbClient->execute(`
+                        UPDATE QueueEntries
+                        SET estimated_time = ${newEstimatedTime}
+                        WHERE queue_entry_id = ${queueEntry.queue_entry_id}
+                    `);
+
+                    io:println(estimateUpdateResult);
+                }
+
+                
+            }
+
             // Decrement the occupied positions in the Services table
             sql:ExecutionResult serviceUpdateResult = check dbClient->execute(`
                 UPDATE Services
-                SET occupied_positions = occupied_positions - 1,
-                WHERE service_id= ${service_id}
+                SET occupied_positions = occupied_positions - 1
+                WHERE service_id = ${service_id}
             `);
 
             int? serviceAffectedRowCount = serviceUpdateResult.affectedRowCount;

@@ -3,7 +3,7 @@ public type QueueEntries record {|
     int  service_id;
     int customer_id;
     string estimated_time; // Store time as a string temporarily.
-    int? position;
+    int position;
 |};
 public type Service record {| 
     int service_id?;
