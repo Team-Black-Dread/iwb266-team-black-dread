@@ -1,28 +1,48 @@
 /* src/components/Home.css */
 .main-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f8f9fa;
 }
 
 .home {
-    padding: 20px;
-    text-align: center;
+  padding: 20px;
+  text-align: center;
 }
 
 .home h2 {
-    color: #007BFF;
+  color: #007bff;
 }
-
 
 .spacer {
-    display: inline-block; /* Make it behave like a block element */
-    width: 20px; /* Set the width for spacing */
+  display: inline-block; /* Make it behave like a block element */
+  width: 20px; /* Set the width for spacing */
 }
 
 
+/* Ensure the content section fills the remaining space */
+.content {
+  padding: 100px 20px 60px; /* Account for fixed header & footer */
+  min-height: calc(100vh - 120px); /* Header + Footer height */
+  overflow-y: auto;
+  background-color: #f3f3f3;
+  text-align: center;
+}
+
+/* Style each section in the content */
+.content section {
+  margin: 20px 0;
+}
+
+.empty {
+  height: 200px;
+}
+
+
+
+/* Global Styles */
 * {
     margin: 0;
     padding: 0;
@@ -32,14 +52,16 @@
   html, body {
     height: 100%;
     font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
   }
   
-  /* Full-width, fixed header */
+  /* Header Styles */
   .header {
     background-color: #007bff;
     color: white;
     text-align: center;
-    padding: 15px;
+    padding: 20px;
     position: fixed;
     top: 0;
     left: 0;
@@ -47,21 +69,91 @@
     z-index: 1000;
   }
   
-  /* Ensure the content section fills the remaining space */
+  .header nav a {
+    margin: 0 15px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .header nav a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Main Content Styles */
   .content {
-    padding: 100px 20px 60px; /* Account for fixed header & footer */
-    min-height: calc(100vh - 120px); /* Header + Footer height */
-    overflow-y: auto;
-    background-color: #f3f3f3;
+    padding: 20px 20px 60px; /* Offset for header and footer */
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
   }
   
-  /* Style each section in the content */
-  .content section {
-    margin: 20px 0;
+  /* Hero Section */
+  .hero {
+    margin-bottom: 40px;
   }
   
-  /* Footer fixed to bottom */
+  .hero h2 {
+    font-size: 2.5rem;
+    color: #007bff;
+  }
+  
+  .hero p {
+    margin: 10px 0 20px;
+    font-size: 1.2rem;
+    color: #555;
+  }
+
+  .button-group{
+    grid-row: inline;
+  }
+  
+  .button-group button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+  
+  .button-group button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Features Section */
+  .features {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .feature-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 300px;
+    text-align: left;
+  }
+  
+  .feature-card h3 {
+    margin-bottom: 10px;
+    color: #007bff;
+  }
+  
+  .feature-card p {
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  /* Footer Styles */
   .footer {
     background-color: #333;
     color: white;
@@ -74,6 +166,33 @@
     z-index: 1000;
   }
 
-  .empty{
-    height: 400px;
+
+
+  /* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
   }
+  
+  .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .close {
+    float: right;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
