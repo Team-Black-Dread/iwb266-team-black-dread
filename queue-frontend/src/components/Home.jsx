@@ -85,13 +85,14 @@ const Home = () => {
           <form>
             <label for="name">Your Name:</label>
             <br />
-            <input type="text" id="name" name="name" required />
+            <input type="text" id="name" name="name" required className="model-input"/>
             <br />
             <br />
 
             <label for="service">Select Service:</label>
             <br />
-            <select id="service" name="service" required>
+            <select id="service" name="service" required className="service">
+                <option value="0">Select</option>
               <option value="bank">Bank</option>
               <option value="hospital">Hospital</option>
               <option value="government">Government Office</option>
