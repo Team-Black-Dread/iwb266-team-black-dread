@@ -1,0 +1,79 @@
+/* src/components/Home.css */
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f8f9fa;
+}
+
+.home {
+    padding: 20px;
+    text-align: center;
+}
+
+.home h2 {
+    color: #007BFF;
+}
+
+
+.spacer {
+    display: inline-block; /* Make it behave like a block element */
+    width: 20px; /* Set the width for spacing */
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    height: 100%;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Full-width, fixed header */
+  .header {
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  /* Ensure the content section fills the remaining space */
+  .content {
+    padding: 100px 20px 60px; /* Account for fixed header & footer */
+    min-height: calc(100vh - 120px); /* Header + Footer height */
+    overflow-y: auto;
+    background-color: #f3f3f3;
+    text-align: center;
+  }
+  
+  /* Style each section in the content */
+  .content section {
+    margin: 20px 0;
+  }
+  
+  /* Footer fixed to bottom */
+  .footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+
+  .empty{
+    height: 400px;
+  }

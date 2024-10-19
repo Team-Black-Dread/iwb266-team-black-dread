@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import './LoginRegister.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,8 +17,9 @@ const Login = () => {
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Email:</label>
+          {/* <label>Email:</label> */}
           <input
+            placeholder='Email'
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -25,15 +27,16 @@ const Login = () => {
           />
         </div>
         <div>
-          <label>Password:</label>
+          {/* <label>Password:</label> */}
           <input
+          placeholder='Password'
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" onClick={goToHomePage}>Login</button>
       </form>
       <p>
         Don't have an account? <Link to="/register">Register</Link>
@@ -41,5 +44,10 @@ const Login = () => {
     </div>
   );
 };
+
+
+function goToHomePage() {
+  window.location.href = "/home"; // Navigate to the home page
+}
 
 export default Login;
