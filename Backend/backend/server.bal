@@ -1,8 +1,14 @@
 import ballerina/http;
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["*"]
+    }
+}
+
 service /queues on new http:Listener(8080) {
 
-    isolated resource function post entries(int customer_id,int service_id) returns string|error? {
+    isolated resource function post entries(int customer_id, int service_id) returns string|error? {
         return addQueueEntry(service_id, customer_id);
     }
 
@@ -10,7 +16,7 @@ service /queues on new http:Listener(8080) {
         return getQueueEntry(id);
     }
 
-    isolated resource function get entries/all () returns QueueEntries[]|error? {
+    isolated resource function get entries/all() returns QueueEntries[]|error? {
         return getAllQueueEntries();
     }
 
@@ -29,7 +35,7 @@ service /queues on new http:Listener(8080) {
     isolated resource function post services(@http:Payload Service queue_service) returns int|error? {
         return addService(queue_service);
     }
-    
+
     isolated resource function get services(int id) returns Service|error? {
         return getService(id);
     }
@@ -46,5 +52,4 @@ service /queues on new http:Listener(8080) {
         return removeService(id);
     }
 
-    
 }

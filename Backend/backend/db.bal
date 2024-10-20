@@ -1,10 +1,9 @@
-
+import ballerina/io;
+import ballerina/regex;
+import ballerina/sql;
 import ballerina/time;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _; // Bundles the driver to the project.
-import ballerina/sql;
-import ballerina/regex;
-import ballerina/io;
 
 configurable string USER = ?;
 configurable string PASSWORD = ?;
@@ -12,10 +11,9 @@ configurable string HOST = ?;
 configurable int PORT = ?;
 configurable string DATABASE = ?;
 
-final mysql:Client dbClient = check new(
-    host=HOST, user=USER, password=PASSWORD, port=PORT, database="queue_management"
+final mysql:Client dbClient = check new (
+    host = HOST, user = USER, password = PASSWORD, port = PORT, database = "queue"
 );
-
 
 ///////////////////////// Service Operations/////////////////////////
 
@@ -27,7 +25,7 @@ isolated function addService(Service queue_service) returns int|error {
         VALUES (${queue_service.service_name}, ${queue_service.time_period}, ${queue_service.start_time}, ${queue_service.working_days}, ${queue_service.working_slots},
                 ${queue_service.capacity})
     `);
-    
+
     int|string? lastInsertId = result.lastInsertId;
     if lastInsertId is int {
         return lastInsertId;
@@ -81,10 +79,10 @@ isolated function updateService(Service queue_service) returns int|error {
 //Remove a service from the database
 isolated function removeService(int id) returns int|error {
     // Retrieve the service_name before deleting the service
-    record {| int service_id; |} serviceRecord = check dbClient->queryRow(
+    record {|int service_id;|} serviceRecord = check dbClient->queryRow(
         `SELECT service_id FROM Services WHERE service_id = ${id}`
     );
-    
+
     int service_id = serviceRecord.service_id;
 
     // Remove the service
@@ -114,7 +112,6 @@ isolated function removeService(int id) returns int|error {
 
 //Add a new queue entry to the database
 isolated function addQueueEntry(int service_id, int customer_id) returns string|error {
-    
 
     // Fetch the current number of occupied positions for the relevant service
     int occupiedPositions = check dbClient->queryRow(
@@ -137,16 +134,12 @@ isolated function addQueueEntry(int service_id, int customer_id) returns string|
     );
     string[] workingDays = regex:split(workingDaysString, " ");
 
-
     string slot = check dbClient->queryRow(
         `SELECT working_slots FROM Services WHERE service_id = ${service_id}`
     );
 
-
-
     // Calculate the estimated time for the new queue entry
-    string estimatedTime = check calculateEstimatedTime(newPosition, start_time, timePeriod, workingDays,slot);
-
+    string estimatedTime = check calculateEstimatedTime(newPosition, start_time, timePeriod, workingDays, slot);
 
     // Insert the new queue entry into the QueueEntries table with the updated position
     sql:ExecutionResult insertResult = check dbClient->execute(`
@@ -154,7 +147,7 @@ isolated function addQueueEntry(int service_id, int customer_id) returns string|
         VALUES (${service_id}, ${customer_id}, ${estimatedTime}, 
                 ${newPosition})
     `);
-    
+
     // Get the last inserted queue entry ID
     int|string? lastInsertId = insertResult.lastInsertId;
 
@@ -171,7 +164,7 @@ isolated function addQueueEntry(int service_id, int customer_id) returns string|
         int? affectedRowCount = updateResult.affectedRowCount;
 
         if affectedRowCount is int && affectedRowCount > 0 {
-            return "Position: "+  newPosition.toString() + "\n" + "Estimated Time: " + estimatedTime; // Return the position of the queue
+            return "Position: " + newPosition.toString() + "\n" + "Estimated Time: " + estimatedTime; // Return the position of the queue
         } else {
             return error("Unable to update the occupied positions");
         }
@@ -179,7 +172,6 @@ isolated function addQueueEntry(int service_id, int customer_id) returns string|
         return error("Unable to obtain last insert ID");
     }
 }
-
 
 //Retrieve a queue entry from the database
 isolated function getQueueEntry(int id) returns QueueEntries|error {
@@ -240,10 +232,10 @@ isolated function updateQueueEntry(QueueEntries queue) returns int|error {
 //Remove a queue entry from the database
 isolated function removeQueueEntry(int queueId) returns int|error {
     // Retrieve the queue information before deleting it to get its position and service name
-    record {| int service_id; int position; |} queueRecord = check dbClient->queryRow(
+    record {|int service_id; int position;|} queueRecord = check dbClient->queryRow(
         `SELECT service_id, position FROM QueueEntries WHERE queue_entry_id = ${queueId}`
     );
-    
+
     int service_id = queueRecord.service_id;
     int removedQueuePosition = queueRecord.position;
 
@@ -299,7 +291,6 @@ isolated function removeQueueEntry(int queueId) returns int|error {
                     io:println(estimateUpdateResult);
                 }
 
-                
             }
 
             // Decrement the occupied positions in the Services table

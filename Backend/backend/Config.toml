@@ -1,0 +1,5 @@
+USER="root"
+PASSWORD="Abc@3456"
+HOST="localhost"  
+PORT=3306
+DATABASE="queue"
