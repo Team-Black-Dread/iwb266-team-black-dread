@@ -44,7 +44,6 @@ const Home = () => {
             crowds effectively and improve service delivery.
           </p>
           <div class="button-group">
-            <button onClick="alert('Queue Created')">Create Queue</button>
             <button onClick={openModal}>Join Queue</button>
             <button onClick="alert('Check Queue Status')">
               Check Queue Status
