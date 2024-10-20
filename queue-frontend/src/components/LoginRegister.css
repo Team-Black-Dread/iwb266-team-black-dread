@@ -1,0 +1,84 @@
+/* Global container to apply background image */
+.page-container {
+    height: 100vh; /* Full height of the viewport */
+    width: 100vw; /* Full width of the viewport */
+    background-image: url('/src/assets/bg_img.jpeg');
+    background-size: cover; /* Cover the full background area */
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+    display: flex; /* To center the form vertically */
+    justify-content: center; /* To center the form horizontally */
+    align-items: center; /* Center the form vertically */
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Apply the blur */
+  .page-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: inherit; /* Inherit the background image */
+    background-size: inherit; /* Inherit background settings */
+    background-position: inherit; /* Inherit background settings */
+    background-repeat: inherit; /* Inherit background settings */
+    filter: blur(8px); /* Apply blur effect */
+    z-index: -1; /* Keep the blur behind the content */
+  }
+  
+  /* Style for the form container */
+  .form-container {
+    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent white background */
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90vw; /* Prevent the form from overflowing on small screens */
+    z-index: 1; /* Keep form content on top of the blur */
+  }  
+  
+
+.form-single {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+
+  

@@ -1,0 +1,102 @@
+.wrapper{
+    position: relative ;
+    width: 420px ;
+    height: 450px ;
+    background: #fff ;
+    border-radius: 10px;
+
+}
+
+.wrapper .form-box{
+    width: 100% ;
+    padding: 40px;
+}
+
+.form h1{
+    font-size: 36px ;
+    text-align: center ;
+}
+
+.form .input-box{
+    position: relative ;
+    width: 100% ;
+    height: 50px ;
+    margin: 30px 0;
+
+}
+
+.input-box input{
+    width: 100% ;
+    height: 100% ;
+    padding: 10px ;
+    font-size: 16px ;
+    border: 2px solid rgba(255, 255, 255, .1) ;
+    background: transparent ;
+    outline: none ;
+    color: #fff ;
+    border-radius: 40px;
+}
+
+.input-box input:placeholder{
+    color: #fff ;
+}
+
+.input-box .icon{
+    position: absolute ;
+    top: 50% ;
+    translate: 0 -50% ;
+    right: 20px ;
+    font-size:16px;
+}
+
+.form .remember-forgot{
+    display: flex ;
+    justify-content: space-between ;
+    margin: -15px 0 15px ;
+    font-size: 14.5px;
+}
+
+.remember-forgot a{
+    text-decoration: none ;
+    color: #fff ;
+}
+
+.remember-forgot a:hover{
+    text-decoration: underline ;
+}
+
+.remember-forgot label input{
+    accent-color: #fff;
+    margin-right: 4px;
+}
+
+.form button{
+    width: 100% ;
+    height: 45px ;
+    border: none ;
+    outline: none ;
+    border-radius: 40px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .1) ;
+    background: #fff ;
+    color: #333 ;
+    font-size: 16px ;
+    cursor: pointer ;
+    border-radius: 40px;
+    font-weight: 700;
+}
+
+.form .register-link{
+    font-size:14.5px;
+    text-align: center ;
+    margin: 20px 0 15px;
+}
+
+.register-link p a{
+    text-decoration: none ;
+    color: #fff ;
+    font-weight: 600;
+}
+
+.register-link p a:hover{
+    text-decoration: underline ;
+}
